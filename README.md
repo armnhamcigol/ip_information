@@ -1,39 +1,66 @@
 # IP Information Website
 
-A self-hosted web application that displays connection and IP information, running on Raspberry Pi with Docker.
+A simple web application that displays connection and IP information for visitors.
 
 ## Overview
 
-This project provides a webpage that shows detailed information about the visitor's connection, including IP address, headers, and other network details. It's designed to run in a Docker container behind an Nginx reverse proxy with SSL/TLS support.
+This project provides a webpage that shows detailed information about the visitor's connection, including:
+- Client IP address
+- Proxy detection (X-Forwarded-For, X-Real-IP, etc.)
+- Zscaler corporate proxy detection
+- All HTTP headers received by the server
+- Request metadata (method, URL, timestamp)
 
 ## Architecture
 
-- **Backend**: Go application (main.go) that handles HTTP requests and returns connection information
-- **Frontend**: HTML pages with connection information display
-- **Web Server**: Nginx serving as reverse proxy with SSL/TLS termination
-- **Deployment**: Docker Compose orchestration
+Simple Go web server with embedded HTML template. No external dependencies required.
 
-## Files
+## Installation
 
-- `main.go` - Go backend application
-- `docker-compose.yml` - Main Docker Compose configuration
-- `go.Dockerfile` - Dockerfile for Go application
-- `html/` - Frontend HTML files
-- `nginx/` - Nginx configuration files
-- Various alternative implementations (Node.js, PHP, Python) for reference
+### Prerequisites
+- Go 1.16 or higher
 
-## Deployment
+### Running Locally
 
-The application runs on port 443 (HTTPS) using Let's Encrypt certificates.
+1. Clone the repository:
+```bash
+git clone https://github.com/armnhamcigol/ip_information.git
+cd ip_information
+```
 
-See `docker-compose.yml` for the complete container setup.
+2. Run the server:
+```bash
+go run main.go
+```
+
+3. Open your browser to `http://localhost:8080`
+
+### Building
+
+```bash
+go build -o ip-info main.go
+./ip-info
+```
+
+## API Endpoints
+
+- `GET /` - HTML interface showing connection information
+- `GET /api` - JSON API returning connection data
+- `GET /health` - Health check endpoint
 
 ## Features
 
 - Display client IP address
-- Show HTTP headers
-- Zscaler detection and handling
-- SSL/TLS encryption
+- Detect and display proxy information
+- Identify Zscaler corporate proxy connections
+- Show all HTTP headers
+- JSON API for programmatic access
+- CORS-enabled API
+- Health check endpoint for monitoring
+
+## Configuration
+
+The server runs on port 8080 by default. To change the port, modify the `ListenAndServe` call in `main.go`.
 
 ## License
 
