@@ -1,0 +1,29 @@
+FROM php:8.0-apache
+
+# Update package list and install required packages
+RUN apt-get update && apt-get install -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Enable Apache modules by copying module configs
+RUN echo "LoadModule ssl_module modules/mod_ssl.so" >> /etc/apache2/apache2.conf \
+    && echo "LoadModule rewrite_module modules/mod_rewrite.so" >> /etc/apache2/apache2.conf \
+    && echo "LoadModule headers_module modules/mod_headers.so" >> /etc/apache2/apache2.conf
+
+# Create symlinks for enabled modules
+RUN ln -sf /etc/apache2/mods-available/ssl.load /etc/apache2/mods-enabled/ \
+    && ln -sf /etc/apache2/mods-available/ssl.conf /etc/apache2/mods-enabled/ \
+    && ln -sf /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/ \
+    && ln -sf /etc/apache2/mods-available/headers.load /etc/apache2/mods-enabled/
+
+# Copy configuration files
+COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
+COPY apache-ssl.conf /etc/apache2/sites-available/default-ssl.conf
+
+# Enable SSL site by creating symlink
+RUN ln -sf /etc/apache2/sites-available/default-ssl.conf /etc/apache2/sites-enabled/
+
+# Expose ports
+EXPOSE 80 443
+
+# Start Apache in foreground
+CMD ["apache2-foreground"]

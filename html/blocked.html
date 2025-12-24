@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Restricted - Deere & Company</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container { 
+            max-width: 600px; 
+            background: white; 
+            border-radius: 15px; 
+            padding: 40px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .warning-icon {
+            font-size: 4em;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        .title { 
+            font-size: 2.5em; 
+            color: #dc3545; 
+            margin: 0 0 20px 0; 
+            font-weight: 700;
+        }
+        .subtitle {
+            font-size: 1.3em;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        .blocked-message {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #721c24;
+        }
+        .requirements {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .requirements h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .requirements ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .requirements li {
+            margin: 8px 0;
+            color: #856404;
+        }
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            color: #333;
+            font-size: 1em;
+            font-family: 'Courier New', monospace;
+            white-space: pre-line;
+        }
+        .footer {
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .error {
+            color: #dc3545;
+            font-style: italic;
+        }
+        .success {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="warning-icon">🚫</div>
+        
+        <h1 class="title">Access Restricted</h1>
+        
+        <div class="subtitle">
+            This resource requires access through Deere's Zscaler infrastructure
+        </div>
+        
+        <div class="blocked-message">
+            <strong>⚠️ Access Denied</strong><br>
+            Your connection is not being routed through the required Deere Zscaler instance.
+        </div>
+        
+        <div class="requirements">
+            <h3>📋 Access Requirements:</h3>
+            <ul>
+                <li>Must connect through Deere & Company's corporate network</li>
+                <li>Zscaler client must be active and authenticated</li>
+                <li>Valid Deere credentials required</li>
+                <li>Appropriate Zscaler policies must be applied</li>
+            </ul>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">Connection Details</div>
+            <div class="info-value" id="connection-details">
+Protocol: HTTPS/1.1
+User Agent: <span id="user-agent">Detecting...</span>
+Timestamp: <span id="timestamp">Loading...</span>
+Browser: <span id="browser-info">Analyzing...</span>
+            </div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">Your Public IP Address</div>
+            <div class="info-value" id="client-ip">Detecting via multiple methods...</div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">Headers Checked</div>
+            <div class="info-value" id="headers-info">Analyzing connection headers for Zscaler indicators...</div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">🌐 X-Forwarded-For (XFF) Headers</div>
+            <div class="info-value" id="xff-info">Analyzing proxy and forwarding headers...</div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">🌐 Network Information</div>
+            <div class="info-value" id="network-info">
+Current URL: <span id="current-url">Loading...</span>
+Referrer: <span id="referrer">Checking...</span>
+Connection: Direct (Non-Zscaler)
+            </div>
+        </div>
+        
+        <div class="footer">
+            🔒 If you believe you should have access, contact Deere IT Support
+        </div>
+    </div>
+
+    <script>
+        // Immediately populate basic browser information
+        function populateBasicInfo() {
+            document.getElementById('user-agent').textContent = navigator.userAgent || 'Unknown';
+            document.getElementById('timestamp').textContent = new Date().toISOString();
+            document.getElementById('browser-info').textContent = navigator.platform + ' - ' + navigator.language;
+            document.getElementById('current-url').textContent = window.location.href;
+            document.getElementById('referrer').textContent = document.referrer || 'Direct Access';
+        }
+
+        // Try multiple IP detection methods
+        function detectIP() {
+            const ipDisplay = document.getElementById('client-ip');
+            let ipDetected = false;
+            
+            // Method 1: ipify.org (most reliable)
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    if (!ipDetected) {
+                        ipDisplay.innerHTML = `<span class="success">${data.ip}</span>`;
+                        ipDetected = true;
+                    }
+                })
+                .catch(() => {
+                    // Method 2: Try ipinfo.io
+                    fetch('https://ipinfo.io/json')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!ipDetected) {
+                                ipDisplay.innerHTML = `<span class="success">${data.ip}</span>\nLocation: ${data.city}, ${data.region}, ${data.country}`;
+                                ipDetected = true;
+                            }
+                        })
+                        .catch(() => {
+                            // Method 3: Try local API with fallback
+                            fetch('/api/headers.php')
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (!ipDetected && data.server_info && data.server_info.REMOTE_ADDR) {
+                                        ipDisplay.innerHTML = `<span class="success">${data.server_info.REMOTE_ADDR}</span>\n(Detected via local server)`;
+                                        ipDetected = true;
+                                        
+                                        // Also populate headers info if API works
+                                        updateHeadersInfo(data);
+                                        updateXFFInfo(data);
+                                    }
+                                })
+                                .catch(() => {
+                                    if (!ipDetected) {
+                                        ipDisplay.innerHTML = '<span class="error">IP detection failed - External APIs blocked by network policy</span>';
+                                    }
+                                });
+                        });
+                });
+
+            // Fallback timeout
+            setTimeout(() => {
+                if (!ipDetected) {
+                    ipDisplay.innerHTML = '<span class="error">Unable to detect IP - Network restrictions may apply</span>';
+                }
+            }, 10000);
+        }
+
+        function updateHeadersInfo(data) {
+            const headersInfo = document.getElementById('headers-info');
+            if (data && data.headers) {
+                const headerCount = Object.keys(data.headers).length;
+                const zscalerFound = data.zscaler_detected || false;
+                headersInfo.innerHTML = `
+Analyzed ${headerCount} HTTP headers
+Zscaler headers detected: ${zscalerFound ? '<span class="success">YES</span>' : '<span class="error">NO</span>'}
+Connection type: ${zscalerFound ? 'Corporate Network' : 'Direct Internet'}`;
+            } else {
+                headersInfo.innerHTML = '<span class="error">Header analysis failed - API endpoint unavailable</span>';
+            }
+        }
+        
+        function updateXFFInfo(data) {
+            const xffInfo = document.getElementById('xff-info');
+            if (data && data.forwarded_info) {
+                const fwd = data.forwarded_info;
+                let xffText = `
+X-Forwarded-For: ${fwd.x_forwarded_for !== 'Not present' ? '<span class="success">' + fwd.x_forwarded_for + '</span>' : '<span class="error">Not present</span>'}
+X-Real-IP: ${fwd.x_real_ip !== 'Not present' ? '<span class="success">' + fwd.x_real_ip + '</span>' : '<span class="error">Not present</span>'}
+X-Forwarded-Proto: ${fwd.x_forwarded_proto !== 'Not present' ? fwd.x_forwarded_proto : 'Not present'}
+X-Forwarded-Host: ${fwd.x_forwarded_host !== 'Not present' ? fwd.x_forwarded_host : 'Not present'}
+Original Remote IP: <span class="success">${fwd.original_ip}</span>`;
+                
+                // Add additional X-* headers if present
+                if (fwd.all_server_vars && Object.keys(fwd.all_server_vars).length > 0) {
+                    xffText += `\n\nAdditional X-Headers:`;
+                    for (const [key, value] of Object.entries(fwd.all_server_vars)) {
+                        xffText += `\n${key}: ${value}`;
+                    }
+                }
+                
+                xffInfo.innerHTML = xffText;
+            } else {
+                xffInfo.innerHTML = '<span class="error">XFF header analysis failed - API endpoint unavailable</span>';
+            }
+        }
+
+        // Try to get detailed connection info from API
+        function getConnectionDetails() {
+            fetch('/api/headers.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.server_info) {
+                        const connectionInfo = `
+Protocol: ${data.server_info.SERVER_PROTOCOL || 'HTTPS/1.1'}
+Method: ${data.server_info.REQUEST_METHOD || 'GET'}
+Server: ${data.server_info.SERVER_NAME || window.location.hostname}
+Port: ${data.server_info.SERVER_PORT || '443'}
+HTTPS: ${data.server_info.HTTPS || 'Yes'}
+Remote Address: ${data.server_info.REMOTE_ADDR || 'Unknown'}
+Timestamp: ${data.timestamp || new Date().toISOString()}`;
+                        
+                        document.getElementById('connection-details').innerHTML = connectionInfo;
+                    }
+                })
+                .catch(error => {
+                    // Keep the basic fallback info that's already there
+                    console.log('API unavailable, using fallback connection details');
+                });
+        }
+
+        // Initialize everything immediately
+        document.addEventListener('DOMContentLoaded', function() {
+            populateBasicInfo();
+            detectIP();
+            getConnectionDetails();
+        });
+
+        // Also run on window load as fallback
+        window.onload = function() {
+            populateBasicInfo();
+            detectIP();
+            getConnectionDetails();
+        };
+
+        // Update timestamp every 30 seconds
+        setInterval(() => {
+            document.getElementById('timestamp').textContent = new Date().toISOString();
+        }, 30000);
+    </script>
+</body>
+</html>

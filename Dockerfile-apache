@@ -1,0 +1,17 @@
+FROM php:8.0-apache
+
+# Enable SSL and rewrite modules
+RUN a2enmod ssl rewrite headers
+
+# Copy configuration files
+COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
+COPY apache-ssl.conf /etc/apache2/sites-available/default-ssl.conf
+
+# Enable SSL site
+RUN a2ensite default-ssl
+
+# Expose ports
+EXPOSE 80 443
+
+# Start Apache in foreground
+CMD ["apache2-foreground"]

@@ -1,0 +1,19 @@
+version: '2.2'
+
+services:
+  apache:
+    build:
+      context: .
+      dockerfile: Dockerfile-apache-simple
+    container_name: connection-info-apache-php
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./html:/var/www/html
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+networks:
+  webnet:
+    driver: bridge
+

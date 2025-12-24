@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Information</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { padding: 2rem; }
+        .data-section { margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Connection Information</h1>
+        <div id="loading" class="alert alert-info">Loading...</div>
+        <div id="error" class="alert alert-danger d-none"></div>
+        <div id="data" class="d-none">
+            <div class="data-section">
+                <h2><span id="proxy-icon"></span> IP Information</h2>
+                <table class="table table-bordered">
+                    <tr><th>Your IP Address</th><td id="ip-address"></td></tr>
+                    <tr><th>Proxy IP Address</th><td id="proxy-ip"></td></tr>
+                    <tr><th>Zscaler Detected</th><td id="is-zscaler"></td></tr>
+                </table>
+            </div>
+            <div class="data-section">
+                <h2>HTTP Headers</h2>
+                <table id="headers-table" class="table table-bordered table-striped"></table>
+            </div>
+            <div class="data-section">
+                <h2>Server Information</h2>
+                <table id="server-info-table" class="table table-bordered table-striped"></table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        fetch('/diagnostics.php')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('data').classList.remove('d-none');
+
+                document.getElementById('ip-address').textContent = data.ip_address;
+                document.getElementById('proxy-ip').textContent = data.proxy_ip || 'Not detected';
+                document.getElementById('is-zscaler').textContent = data.is_zscaler ? 'Yes' : 'No';
+
+                if(data.is_zscaler) {
+                    document.getElementById('proxy-icon').textContent = 'Zscaler ✅';
+                } else if(data.proxy_ip) {
+                    document.getElementById('proxy-icon').textContent = 'Proxy ✅';
+                } else {
+                    document.getElementById('proxy-icon').textContent = 'Direct Connection ✅';
+                }
+
+                const headersTable = document.getElementById('headers-table');
+                for (const [key, value] of Object.entries(data.headers)) {
+                    const row = headersTable.insertRow();
+                    row.insertCell().textContent = key;
+                    row.insertCell().textContent = value;
+                }
+
+                const serverInfoTable = document.getElementById('server-info-table');
+                for (const [key, value] of Object.entries(data.server_info)) {
+                    const row = serverInfoTable.insertRow();
+                    row.insertCell().textContent = key;
+                    row.insertCell().textContent = typeof value === 'string' ? value : JSON.stringify(value);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').classList.add('d-none');
+                const errorDiv = document.getElementById('error');
+                errorDiv.classList.remove('d-none');
+                errorDiv.textContent = 'Error loading data: ' + error;
+            });
+    </script>
+</body>
+</html>
+

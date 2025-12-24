@@ -1,0 +1,32 @@
+version: '2.2'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: connection-info-nginx-cgi
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./html:/usr/share/nginx/html
+      - ./nginx-cgi-config.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - /tmp/fcgiwrap.socket:/var/run/fcgiwrap.socket
+    depends_on:
+      - fcgiwrap
+    networks:
+      - webnet
+
+  fcgiwrap:
+    image: richarvey/fcgiwrap:latest
+    container_name: fcgiwrap
+    volumes:
+      - ./html:/usr/share/nginx/html
+      - /tmp/fcgiwrap.socket:/var/run/fcgiwrap.socket
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge

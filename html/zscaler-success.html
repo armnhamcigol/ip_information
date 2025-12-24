@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zscaler Connection Verified - Deere & Company</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #367c2b 0%, #4a9640 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container { 
+            max-width: 700px; 
+            background: white; 
+            border-radius: 15px; 
+            padding: 40px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 4em;
+            color: #367c2b;
+            margin-bottom: 20px;
+        }
+        .title { 
+            font-size: 2.5em; 
+            color: #367c2b; 
+            margin: 0 0 20px 0; 
+            font-weight: 700;
+        }
+        .subtitle {
+            font-size: 1.3em;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        .success-message {
+            background: #e8f5e8;
+            border: 2px solid #367c2b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #1b5e20;
+        }
+        .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #367c2b;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #367c2b;
+            font-size: 1em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-value {
+            color: #333;
+            font-size: 0.95em;
+            font-family: 'Courier New', monospace;
+            white-space: pre-line;
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #367c2b;
+            text-align: left;
+        }
+        .footer {
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .success {
+            color: #367c2b;
+            font-weight: 600;
+        }
+        .status-badge {
+            background: #367c2b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✅</div>
+        
+        <h1 class="title">Connection Verified!</h1>
+        
+        <div class="subtitle">
+            You're successfully connecting through Deere's Zscaler instance
+        </div>
+        
+        <div class="success-message">
+            <strong>🎉 Access Granted!</strong><br>
+            Your connection is being properly routed through Deere's Zscaler infrastructure. 
+            You have been authenticated and authorized to access this resource.
+        </div>
+        
+        <div class="info-section">
+            <div class="info-label">🌐 Your Public IP Address</div>
+            <div class="info-value" id="client-ip" class="loading">Detecting via multiple methods...</div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-label">🔍 Connection Details</div>
+            <div class="info-value" id="connection-details">
+Protocol: HTTPS/1.1
+User Agent: <span id="user-agent" class="loading">Detecting...</span>
+Timestamp: <span id="timestamp" class="loading">Loading...</span>
+Browser: <span id="browser-info" class="loading">Analyzing...</span>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-label">🔒 Zscaler Verification Status</div>
+            <div class="info-value" id="zscaler-status" class="loading">Analyzing Zscaler headers and connection details...</div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-label">🌐 X-Forwarded-For (XFF) Headers</div>
+            <div class="info-value" id="xff-info" class="loading">Analyzing proxy and forwarding headers through Zscaler gateway...</div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Security Status</div>
+                <div class="info-value">
+                    <span class="status-badge">SECURE</span><br>
+                    Zscaler Protected
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Network Information</div>
+                <div class="info-value" id="network-info" class="loading">Loading...</div>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <div class="info-label">📊 Session Information</div>
+            <div class="info-value" id="session-info">
+Current URL: <span id="current-url" class="loading">Loading...</span>
+Referrer: <span id="referrer" class="loading">Checking...</span>
+Connection Type: <span class="success">Corporate Network (Zscaler)</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            🔄 Auto-refreshes every 30 seconds | 🛡️ Protected by Deere & Company IT Security
+        </div>
+    </div>
+
+    <script>
+        // Immediately populate basic browser information
+        function populateBasicInfo() {
+            document.getElementById('user-agent').textContent = navigator.userAgent || 'Unknown';
+            document.getElementById('timestamp').textContent = new Date().toISOString();
+            document.getElementById('browser-info').textContent = navigator.platform + ' - ' + navigator.language;
+            document.getElementById('current-url').textContent = window.location.href;
+            document.getElementById('referrer').textContent = document.referrer || 'Direct Access';
+            
+            const networkInfo = `
+Connection: Deere Corporate Network
+Online Status: ${navigator.onLine ? 'Connected' : 'Offline'}
+Screen Resolution: ${screen.width}x${screen.height}`;
+            document.getElementById('network-info').innerHTML = networkInfo;
+        }
+
+        // Try multiple IP detection methods
+        function detectIP() {
+            const ipDisplay = document.getElementById('client-ip');
+            let ipDetected = false;
+            
+            // Method 1: ipify.org (most reliable)
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    if (!ipDetected) {
+                        ipDisplay.innerHTML = `<span class="success">${data.ip}</span>\n(Your public IP as seen by external services)`;
+                        ipDetected = true;
+                    }
+                })
+                .catch(() => {
+                    // Method 2: Try ipinfo.io with location data
+                    fetch('https://ipinfo.io/json')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!ipDetected) {
+                                ipDisplay.innerHTML = `<span class="success">${data.ip}</span>\nLocation: ${data.city}, ${data.region}, ${data.country}\nOrganization: ${data.org || 'Unknown'}`;
+                                ipDetected = true;
+                            }
+                        })
+                        .catch(() => {
+                            // Method 3: Try local API
+                            fetch('/api/headers.php')
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (!ipDetected && data.server_info && data.server_info.REMOTE_ADDR) {
+                                        ipDisplay.innerHTML = `<span class="success">${data.server_info.REMOTE_ADDR}</span>\n(Detected via local server)`;
+                                        ipDetected = true;
+                                        updateZscalerStatus(data);
+                                        updateXFFInfo(data);
+                                    }
+                                })
+                                .catch(() => {
+                                    if (!ipDetected) {
+                                        ipDisplay.innerHTML = '<span class="loading">IP detection services unavailable</span>';
+                                    }
+                                });
+                        });
+                });
+
+            // Fallback timeout
+            setTimeout(() => {
+                if (!ipDetected) {
+                    ipDisplay.innerHTML = 'IP detection temporarily unavailable';
+                }
+            }, 10000);
+        }
+
+        function updateZscalerStatus(data) {
+            const statusDisplay = document.getElementById('zscaler-status');
+            if (data) {
+                const headerCount = data.headers ? Object.keys(data.headers).length : 0;
+                const zscalerFound = data.zscaler_detected || false;
+                const zscalerHeaders = data.zscaler_headers || {};
+                
+                let statusText = `
+Headers Analyzed: ${headerCount}
+Zscaler Headers Found: ${zscalerFound ? 'YES ✅' : 'NO ❌'}
+Connection Verified: ${zscalerFound ? 'AUTHORIZED' : 'STANDARD'}`;
+
+                if (zscalerFound && Object.keys(zscalerHeaders).length > 0) {
+                    statusText += `\n\nZscaler Headers Detected:`;
+                    for (const [key, value] of Object.entries(zscalerHeaders)) {
+                        statusText += `\n${key}: ${value}`;
+                    }
+                }
+                
+                statusDisplay.innerHTML = statusText;
+            } else {
+                statusDisplay.innerHTML = '✅ Connection verified as Zscaler-authorized\n(Detailed analysis unavailable)';
+            }
+        }
+        
+        function updateXFFInfo(data) {
+            const xffInfo = document.getElementById('xff-info');
+            if (data && data.forwarded_info) {
+                const fwd = data.forwarded_info;
+                let xffText = `
+X-Forwarded-For: ${fwd.x_forwarded_for !== 'Not present' ? '<span class="success">' + fwd.x_forwarded_for + '</span>' : '<span class="loading">Not present</span>'}
+X-Real-IP: ${fwd.x_real_ip !== 'Not present' ? '<span class="success">' + fwd.x_real_ip + '</span>' : '<span class="loading">Not present</span>'}
+X-Forwarded-Proto: ${fwd.x_forwarded_proto !== 'Not present' ? '<span class="success">' + fwd.x_forwarded_proto + '</span>' : '<span class="loading">Not present</span>'}
+X-Forwarded-Host: ${fwd.x_forwarded_host !== 'Not present' ? '<span class="success">' + fwd.x_forwarded_host + '</span>' : '<span class="loading">Not present</span>'}
+Zscaler Gateway IP: <span class="success">${fwd.original_ip}</span>`;
+                
+                // Add additional X-* headers if present (likely from Zscaler)
+                if (fwd.all_server_vars && Object.keys(fwd.all_server_vars).length > 0) {
+                    xffText += `\n\nZscaler/Proxy X-Headers:`;
+                    for (const [key, value] of Object.entries(fwd.all_server_vars)) {
+                        xffText += `\n${key}: <span class="success">${value}</span>`;
+                    }
+                } else {
+                    xffText += `\n\nNo additional proxy headers detected`;
+                }
+                
+                xffInfo.innerHTML = xffText;
+            } else {
+                xffInfo.innerHTML = '✅ Zscaler gateway connection confirmed\n(Detailed XFF analysis unavailable)';
+            }
+        }
+
+        function updateConnectionDetails() {
+            fetch('/api/headers.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.server_info) {
+                        const connectionInfo = `
+Protocol: ${data.server_info.SERVER_PROTOCOL || 'HTTPS/1.1'}
+Method: ${data.server_info.REQUEST_METHOD || 'GET'}
+Server: ${data.server_info.SERVER_NAME || window.location.hostname}
+Port: ${data.server_info.SERVER_PORT || '443'}
+HTTPS: ${data.server_info.HTTPS === 'Yes' ? '✅ Enabled' : '❌ Not Available'}
+Remote Address: ${data.server_info.REMOTE_ADDR || 'Unknown'}
+Timestamp: ${data.timestamp || new Date().toISOString()}
+Connection Status: ✅ Secure & Verified`;
+                        
+                        document.getElementById('connection-details').innerHTML = connectionInfo;
+                    }
+                })
+                .catch(() => {
+                    // Keep the basic fallback info
+                    console.log('API unavailable, using fallback connection details');
+                });
+        }
+
+        // Initialize everything immediately
+        function initializePage() {
+            populateBasicInfo();
+            detectIP();
+            updateConnectionDetails();
+        }
+
+        // Multiple initialization triggers
+        document.addEventListener('DOMContentLoaded', initializePage);
+        window.addEventListener('load', initializePage);
+
+        // Auto-refresh key information every 30 seconds
+        setInterval(() => {
+            document.getElementById('timestamp').textContent = new Date().toISOString();
+            detectIP(); // Refresh IP detection periodically
+        }, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Restricted - Deere & Company</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container { 
+            max-width: 600px; 
+            background: white; 
+            border-radius: 15px; 
+            padding: 40px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .warning-icon {
+            font-size: 4em;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        .title { 
+            font-size: 2.5em; 
+            color: #dc3545; 
+            margin: 0 0 20px 0; 
+            font-weight: 700;
+        }
+        .subtitle {
+            font-size: 1.3em;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        .blocked-message {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #721c24;
+        }
+        .requirements {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .requirements h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .requirements ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .requirements li {
+            margin: 8px 0;
+            color: #856404;
+        }
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            color: #333;
+            font-size: 1em;
+            font-family: 'Courier New', monospace;
+        }
+        .footer {
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="warning-icon">🚫</div>
+        
+        <h1 class="title">Access Restricted</h1>
+        
+        <div class="subtitle">
+            This resource requires access through Deere's Zscaler infrastructure
+        </div>
+        
+        <div class="blocked-message">
+            <strong>⚠️ Access Denied</strong><br>
+            Your connection is not being routed through the required Deere Zscaler instance.
+        </div>
+        
+        <div class="requirements">
+            <h3>📋 Access Requirements:</h3>
+            <ul>
+                <li>Must connect through Deere & Company's corporate network</li>
+                <li>Zscaler client must be active and authenticated</li>
+                <li>Valid Deere credentials required</li>
+                <li>Appropriate Zscaler policies must be applied</li>
+            </ul>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">Connection Details</div>
+            <div class="info-value" id="connection-details">Analyzing connection...</div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">Your IP Address</div>
+            <div class="info-value" id="client-ip">Loading...</div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">Headers Checked</div>
+            <div class="info-value" id="headers-info">Scanning for Zscaler headers...</div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">🌐 Original IP Address (X-Forwarded-For)</div>
+            <div class="info-value" id="forwarded-for">Loading...</div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">Real IP / Forwarded Host</div>
+            <div class="info-value" id="forwarded-details">Loading...</div>
+        </div>
+        
+        <div class="footer">
+            🔒 If you believe you should have access, contact Deere IT Support
+        </div>
+    </div>
+
+    <script>
+        // Update connection information
+        function updateConnectionInfo() {
+            fetch('/api/headers.php')
+                .then(response => response.json())
+                .then(data => {
+                    // Update connection details
+                    const connectionInfo = `
+Protocol: ${data.server_info.SERVER_PROTOCOL}
+Remote Address: ${data.server_info.REMOTE_ADDR}
+Server Port: ${data.server_info.SERVER_PORT}
+HTTPS: ${data.server_info.HTTPS}
+Timestamp: ${data.timestamp}`;
+                    
+                    document.getElementById('connection-details').innerHTML = connectionInfo;
+                    
+                    // Show header analysis
+                    const headerCount = Object.keys(data.headers).length;
+                    const zscalerFound = data.zscaler_detected || false;
+                    
+                    document.getElementById('headers-info').innerHTML = 
+                        `Analyzed ${headerCount} headers\nZscaler headers found: ${zscalerFound ? 'YES' : 'NO'}`;
+                    
+                    // Update forwarded information
+                    if (data.forwarded_info) {
+                        document.getElementById('forwarded-for').innerHTML = data.forwarded_info.x_forwarded_for;
+                        document.getElementById('forwarded-details').innerHTML = 
+                            `Real IP: ${data.forwarded_info.x_real_ip}\nForwarded Host: ${data.forwarded_info.x_forwarded_host}\nForwarded Proto: ${data.forwarded_info.x_forwarded_proto}`;
+                    }
+                    
+                    // Try to get IP from external service
+                    fetch("https://api.ipify.org?format=json")
+                        .then(response => response.json())
+                        .then(ipData => {
+                            document.getElementById('client-ip').innerHTML = ipData.ip;
+                        })
+                        .catch(error => {
+                            document.getElementById('client-ip').innerHTML = "IP detection blocked by policy";
+                        });
+                })
+                .catch(error => {
+                    document.getElementById('connection-details').innerHTML = 'Error analyzing connection';
+                    console.error('Error:', error);
+                });
+        }
+
+        // Load info when page loads
+        window.onload = updateConnectionInfo;
+        
+        // Auto-refresh every 30 seconds
+        setInterval(updateConnectionInfo, 30000);
+    </script>
+</body>
+</html>

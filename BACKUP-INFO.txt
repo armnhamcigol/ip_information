@@ -1,0 +1,44 @@
+NGINX BACKUP INFORMATION
+========================
+
+Created: 07/11/2025 13:40:34
+Purpose: Working HTTPS configuration with Let's Encrypt SSL
+
+BACKUPS CREATED:
+1. Docker Image Backup:
+   - connection-info-nginx-backup:working-ssl-fixed
+   - Use: docker run with this image to restore working container
+
+2. Configuration Files Backup:
+   - backup-working-ssl-fixed.tar.gz
+   - Contains: nginx/, html/, certbot/ directories
+
+3. Restore Script:
+   - restore-working-nginx.sh
+   - Usage: ./restore-working-nginx.sh
+
+MANUAL RESTORE COMMANDS:
+If you need to restore manually:
+
+1. Stop current container:
+   docker stop connection-info-nginx && docker rm connection-info-nginx
+
+2. Extract config backup:
+   cd /home/pi/connection-info-site
+   sudo tar -xzf backup-working-ssl-fixed.tar.gz
+
+3. Start from backup image:
+   docker run -d --name connection-info-nginx -p 80:80 -p 443:443 \\
+     -v /home/pi/connection-info-site/html:/usr/share/nginx/html:rw \\
+     -v /home/pi/connection-info-site/nginx/default.conf:/etc/nginx/conf.d/default.conf:rw \\
+     -v /home/pi/connection-info-site/certbot/conf:/etc/letsencrypt:rw \\
+     -v /home/pi/connection-info-site/certbot/www:/var/www/certbot:rw \\
+     connection-info-nginx-backup:working-ssl-fixed
+
+FEATURES IN THIS BACKUP:
+- HTTPS working with Let's Encrypt certificate
+- HTTP headers sections added to the webpage
+- Modern SSL configuration with security headers
+- Content Security Policy configured
+- HTTP to HTTPS redirect working
+

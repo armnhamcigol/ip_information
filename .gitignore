@@ -1,0 +1,29 @@
+# SSL certificates and sensitive data
+certbot/
+*.pem
+*.key
+*.crt
+/etc/letsencrypt/
+
+# Backup files
+*.backup
+*.tar.gz
+backup-working-ssl-*.tar.gz
+backups/
+
+# Logs
+ops-logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
